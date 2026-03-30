@@ -1,23 +1,22 @@
 package fr.istic.taa.jaxrs.dao.generic;
 
-import java.io.Serializable;
-import java.util.List;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 
+import java.io.Serializable;
+import java.util.List;
+
+import static java.util.Objects.requireNonNull;
+
 public abstract class AbstractJpaDao<K, T extends Serializable> implements IGenericDao<K, T> {
 
-	private Class<T> clazz;
+	private final Class<T> clazz;
 
 	protected EntityManager entityManager;
 
-	public AbstractJpaDao() {
+	public AbstractJpaDao(Class<T> clazz) {
 		this.entityManager = EntityManagerHelper.getEntityManager();
-	}
-
-	public void setClazz(Class<T> clazzToSet) {
-		this.clazz = clazzToSet;
+		this.clazz = requireNonNull(clazz);
 	}
 
 	public T findOne(K id) {
@@ -33,7 +32,6 @@ public abstract class AbstractJpaDao<K, T extends Serializable> implements IGene
 		t.begin();
 		entityManager.persist(entity);
 		t.commit();
-
 	}
 
 	public T update(final T entity) {

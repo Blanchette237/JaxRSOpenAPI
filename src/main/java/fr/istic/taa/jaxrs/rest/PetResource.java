@@ -8,17 +8,19 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Path("pet")
-@Produces({"application/json", "application/xml"})
+@Produces({"application/json"})
 public class PetResource {
 
   @GET
   @Path("/{petId}")
   public Pet getPetById(@PathParam("petId") Long petId)  {
-      // return pet
-      return new Pet();
+	  Pet p = new Pet();
+	  p.setName("Libellule");
+      return p;
   }
 
   @GET
@@ -35,4 +37,8 @@ public class PetResource {
     // add pet
     return Response.ok().entity("SUCCESS").build();
   }
+  
+ 
+  
+  
 }

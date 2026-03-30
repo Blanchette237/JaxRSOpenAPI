@@ -18,9 +18,9 @@ public class User {
 	private String firstname;
 	private String password;
 	private String email;
-	
-	
-	
+
+	public User() {}
+
 	public User(Long userId, String name, String firstname, String password, String email) {
 		super();
 		UserId = userId;

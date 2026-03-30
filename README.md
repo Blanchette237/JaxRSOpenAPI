@@ -1,9 +1,155 @@
-## JaxRS + openAPI
+# Backend JaxRS – Gestion de Concerts
 
-1. Import this project in your IDE, 
-2. Start the database
-3. Start the database viewer
-4. Start the backend. There is a main class to start the backend
+## Modèle métier
+
+Application de billetterie de concerts. Un **Organisateur** crée des **Concerts**. Un **Client** peut acheter un ou plusieurs **Tickets** pour un concert.
+
+---
+
+## Diagramme de classes
+
+```
+         User  (TABLE_PER_CLASS)
+        /        \
+   Client       Organiser
+     |               |
+  ticketsAchetes   concerts  (OneToMany, mappedBy)
+     |               |
+   Ticket  -----> Concert
+  (ManyToOne)   (ManyToOne)
+```
+
+### Entités JPA
+
+| Classe      | Table       | Description                               |
+|-------------|-------------|-------------------------------------------|
+| `User`      | –           | Classe de base avec héritage JPA          |
+| `Client`    | `client`    | Acheteur de tickets                       |
+| `Organiser` | `organiser` | Organisateur de concerts                  |
+| `Concert`   | `concert`   | Événement : lieu, date, capacité          |
+| `Ticket`    | `ticket`    | Billet associé à un client et un concert  |
+
+**Héritage** : `User → Client` et `User → Organiser` (stratégie `TABLE_PER_CLASS`)
+
+**Relations bidirectionnelles (mappedBy)** :
+- `Concert.ticketsVendus` ↔ `Ticket.concert`
+- `Client.ticketsAchetes` ↔ `Ticket.client`
+- `Organiser.concerts` ↔ `Concert.organiser`
+
+---
+
+## Architecture
+
+```
+domain/          → Entités JPA
+dao/generic/     → AbstractJpaDao + 1 DAO par entité
+jaxr/services/   → Logique métier (ConcertService, TicketService, ...)
+jaxr/dto/        → DTOs pour les entrées API
+rest/            → Contrôleurs JAX-RS
+```
+
+### Types de requêtes JPA
+
+| Type           | Où          | Méthode                                      |
+|----------------|-------------|----------------------------------------------|
+| JPQL           | `ConcertDao`| `findByOrganiseur(Long id)`                  |
+| Named Query    | `ConcertDao`| `findByLieu(String)` → `Concert.findByLieu`  |
+| Criteria Query | `ConcertDao`| `findUpcoming()` (concerts à venir triés)    |
+| JPQL           | `TicketDao` | `countByConcert`, `existsByConcertAndPlace`  |
+
+---
+
+## API REST – Endpoints
+
+Serveur : `http://localhost:8080`
+Documentation OpenAPI JSON : `GET http://localhost:8080/openapi.json`
+
+### Concerts (`/concerts`) — documentation OpenAPI complète
+
+| Méthode | URL                          | Description                                    |
+|---------|------------------------------|------------------------------------------------|
+| GET     | `/concerts`                  | Tous les concerts                              |
+| GET     | `/concerts/{id}`             | Concert par ID                                 |
+| POST    | `/concerts`                  | Créer un concert (`ConcertCreateDTO`)          |
+| DELETE  | `/concerts/{id}`             | Supprimer un concert                           |
+| GET     | `/concerts/upcoming`         | **Métier** : concerts à venir (Criteria Query) |
+| GET     | `/concerts/lieu/{lieu}`      | **Métier** : par lieu (Named Query)            |
+| GET     | `/concerts/organiseur/{id}`  | **Métier** : par organisateur (JPQL)           |
+| GET     | `/concerts/{id}/tickets`     | **Métier** : tickets vendus pour un concert    |
+
+### Tickets (`/tickets`)
+
+| Méthode | URL                     | Description                                    |
+|---------|-------------------------|------------------------------------------------|
+| GET     | `/tickets`              | Tous les tickets                               |
+| GET     | `/tickets/{id}`         | Ticket par ID                                  |
+| POST    | `/tickets`              | Acheter un ticket (`TicketCreateDTO`)          |
+| DELETE  | `/tickets/{id}/annuler` | **Métier** : annuler un ticket (ACTIF→ANNULÉ)  |
+
+### Clients (`/clients`)
+
+| Méthode | URL             | Description                          |
+|---------|-----------------|--------------------------------------|
+| GET     | `/clients`      | Tous les clients                     |
+| GET     | `/clients/{id}` | Client par ID                        |
+| POST    | `/clients`      | Créer un client (`ClientCreateDTO`)  |
+| DELETE  | `/clients/{id}` | Supprimer un client                  |
+
+### Organisateurs (`/organiseurs`)
+
+| Méthode | URL                  | Description                                      |
+|---------|----------------------|--------------------------------------------------|
+| GET     | `/organiseurs`       | Tous les organisateurs                           |
+| GET     | `/organiseurs/{id}`  | Organisateur par ID                              |
+| POST    | `/organiseurs`       | Créer un organisateur (`OrganiserCreateDTO`)     |
+| DELETE  | `/organiseurs/{id}`  | Supprimer un organisateur                        |
+
+---
+
+## Exemples de corps JSON
+
+### Créer un concert
+```json
+{
+  "organisateurId": 1,
+  "lieu": "Zenith Rennes",
+  "capacite": 3000,
+  "description": "Concert rock",
+  "dateTime": "2026-06-15T20:00:00",
+  "popularite": 4
+}
+```
+
+### Acheter un ticket
+```json
+{
+  "utilisateurId": 1,
+  "concertId": 1,
+  "numeroPlace": 42
+}
+```
+
+### Créer un client ou organisateur
+```json
+{
+  "name": "Dupont",
+  "firstname": "Jean",
+  "email": "jean@example.com",
+  "password": "motdepasse"
+}
+```
+
+---
+
+## Lancement
+
+1. Importer le projet dans votre IDE
+2. Lancer la classe `RestServer` (main class)
+3. Accéder à `http://localhost:8080/openapi.json` pour la doc OpenAPI
+
+La base de données HSQL est créée en mémoire au démarrage (persistence unit `dev`).
+
+---
 
 
 

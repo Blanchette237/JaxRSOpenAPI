@@ -39,8 +39,9 @@ public class Ticket implements Serializable{
 	public Long getTicketId() {
 		return TicketId;
 	}
+	public Ticket() {}
+
 	public Ticket(Long ticketId, Client client, Concert concert, TicketStatus status) {
-		super();
 		TicketId = ticketId;
 		this.client = client;
 		this.concert = concert;
@@ -85,10 +86,6 @@ public class Ticket implements Serializable{
 	}
 	public void setPrixUnitaire(double prixUnitaire) {
 		this.prixUnitaire = prixUnitaire;
-	}
-	public void setPrixUnitaire(Double prixUnitaire) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

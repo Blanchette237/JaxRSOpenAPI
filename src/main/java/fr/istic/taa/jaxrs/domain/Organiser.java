@@ -10,9 +10,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "oganiser")
+@Table(name = "organiser")
 
 public class Organiser extends User implements Serializable  {
+	public Organiser() {}
+
 	public Organiser(Long userId, String name, String firstname, String password, String email) {
 		super(userId, name, firstname, password, email);
 	}

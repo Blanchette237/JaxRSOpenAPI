@@ -4,7 +4,7 @@ import fr.istic.taa.jaxrs.domain.Client;
 
 public class ClientDao extends AbstractJpaDao<Long, Client> {
 
-	public ClientDao(Class<Client> clazz) {
+	public ClientDao() {
 		super(Client.class);
 	}
 	

@@ -13,11 +13,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "concert")
+@NamedQuery(name = "Concert.findByLieu", query = "SELECT c FROM Concert c WHERE c.lieu = :lieu")
 public class Concert implements Serializable{
 	@Id
 	@GeneratedValue

@@ -15,70 +15,83 @@ import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.NotFoundException;
 
 public class TicketService {
-	
-	 private final ConcertDao concertDao = new ConcertDao();
-	 private final TicketDao ticketDao = new TicketDao();
-	 private final ClientDao clientDao = new ClientDao();
 
-	    public Ticket findOne(Long id) {
-	        return ticketDao.findOne(id);
-	    }
+    private final ConcertDao concertDao = new ConcertDao();
+    private final TicketDao ticketDao = new TicketDao();
+    private final ClientDao clientDao = new ClientDao();
 
-	    public List<Ticket> findAll() {
-	        return ticketDao.findAll();
-	    }
+    public Ticket findOne(Long id) {
+        return ticketDao.findOne(id);
+    }
 
-	    public long create(final TicketCreateDTO dto) throws ClientErrorException {
-	        // Contrôle métier
+    public List<Ticket> findAll() {
+        return ticketDao.findAll();
+    }
 
-	        // Est-ce que l'id de l'utilisateur fourni est un organisateur ?
-	        var client = clientDao.findOne(dto.getUtilisateurId());
-	        if (client == null) {
-	            throw new BadRequestException("Utilisateur non trouvé");
-	        }
+    public List<Ticket> findByConcert(Long concertId) {
+        Concert concert = concertDao.findOne(concertId);
+        if (concert == null) {
+            throw new NotFoundException("Concert non trouvé");
+        }
+        return ticketDao.findByConcert(concert);
+    }
 
-	        // Le concert existe-t-il ?
-	        var concert = concertDao.findOne(dto.getConcertId());
-	        if (concert == null) {
-	            throw new NotFoundException("Le concert n'existe pas");
-	        }
+    public void annuler(Long ticketId) {
+        Ticket ticket = ticketDao.findOne(ticketId);
+        if (ticket == null) {
+            throw new NotFoundException("Ticket non trouvé");
+        }
+        if (ticket.getStatus() != TicketStatus.ACTIVE) {
+            throw new BadRequestException("Seul un ticket ACTIVE peut être annulé");
+        }
+        ticket.setStatus(TicketStatus.ANNULE);
+        // Restituer la place au concert
+        Concert concert = ticket.getConcert();
+        concert.setCapacite(concert.getCapacite() + 1);
+        ticketDao.update(ticket);
+        concertDao.update(concert);
+    }
 
-	        // Le concert est à venir ?
-	        if (!concert.getDate().isAfter(LocalDateTime.now())) {
-	            throw new BadRequestException("Le concert a déjà eu lieu");
-	        }
+    public long create(final TicketCreateDTO dto) throws ClientErrorException {
+        var client = clientDao.findOne(dto.getUtilisateurId());
+        if (client == null) {
+            throw new BadRequestException("Utilisateur non trouvé");
+        }
 
-	        // Reste-t-il des places
-	        long placesRestantes = ticketDao.countByConcert(concert);
-	        if (placesRestantes >= concert.getCapaciteMax()) {
-	            throw new ConflictException("Le concert est complet");
-	        }
+        var concert = concertDao.findOne(dto.getConcertId());
+        if (concert == null) {
+            throw new NotFoundException("Le concert n'existe pas");
+        }
 
-	        // La place est-elle disponible ?
-	        if (ticketDao.existsByConcertAndPlace(dto.getNumeroPlace(), concert)) {
-	            throw new ConflictException("La place " + dto.getNumeroPlace() + " n'est plus disponible");
-	        }
+        if (!concert.getDate().isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("Le concert a déjà eu lieu");
+        }
 
-	        // Création de l'entité - Mapping
-	        Double prixUnitaire = calculPrixUnitaire(concert, dto.getNumeroPlace());
-	        Ticket ticket = new Ticket();
-	        ticket.setConcert(concert);
-	        ticket.setClient(client);
-	        ticket.setDate_achat(LocalDateTime.now());
-	        ticket.setStatus(TicketStatus.ACTIVE);
-	        ticket.setPrixUnitaire(prixUnitaire);
-	        ticket.setNumeroPlace(dto.getNumeroPlace());
-	        concert.setCapacite(concert.getCapacite() - 1);
+        long placesVendues = ticketDao.countByConcert(concert);
+        if (placesVendues >= concert.getCapaciteMax()) {
+            throw new ConflictException("Le concert est complet");
+        }
 
-	        ticketDao.save(ticket);
-	        concertDao.save(concert);
-	        return ticket.getTicketId();
-	    }
+        if (ticketDao.existsByConcertAndPlace(dto.getNumeroPlace(), concert)) {
+            throw new ConflictException("La place " + dto.getNumeroPlace() + " n'est plus disponible");
+        }
 
-	    private Double calculPrixUnitaire(Concert concert, String numeroPlace) {
-	        // TODO Calcul en fonction du concert, du genre musical, de la popularité des artistes, etc.
-	        // TODO + numéro de place
-	        return 42.0d;
-	    }
+        Ticket ticket = new Ticket();
+        ticket.setConcert(concert);
+        ticket.setClient(client);
+        ticket.setDate_achat(LocalDateTime.now());
+        ticket.setStatus(TicketStatus.ACTIVE);
+        ticket.setPrixUnitaire(calculPrixUnitaire(concert, dto.getNumeroPlace()));
+        ticket.setNumeroPlace(dto.getNumeroPlace());
+        concert.setCapacite(concert.getCapacite() - 1);
 
+        ticketDao.save(ticket);
+        concertDao.update(concert);
+        return ticket.getTicketId();
+    }
+
+    private double calculPrixUnitaire(Concert concert, int numeroPlace) {
+        // Prix de base : 42€ (logique métier simplifiée)
+        return 42.0d;
+    }
 }

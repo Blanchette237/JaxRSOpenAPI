@@ -12,6 +12,8 @@ import jakarta.persistence.Table;
 @Table(name = "client" )
 public class Client extends User implements Serializable {
 	
+	public Client() {}
+
 	public Client(Long userId, String name, String firstname, String password, String email) {
 		super(userId, name, firstname, password, email);
 	}

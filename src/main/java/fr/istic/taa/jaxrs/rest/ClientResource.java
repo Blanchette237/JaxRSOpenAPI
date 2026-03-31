@@ -6,6 +6,7 @@ import java.util.List;
 import fr.istic.taa.jaxr.dto.ClientCreateDTO;
 import fr.istic.taa.jaxr.services.ClientService;
 import fr.istic.taa.jaxrs.domain.Client;
+import fr.istic.taa.jaxrs.domain.Ticket;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -47,5 +48,21 @@ public class ClientResource {
     public Response deleteClient(@PathParam("id") Long id) {
         service.delete(id);
         return Response.noContent().build();
+    }
+
+    // Endpoint métier : exploite la relation bidirectionnelle Client ↔ Ticket (mappedBy = "client")
+    @GET
+    @Path("/{id}/tickets")
+    public Response getTicketsByClient(@PathParam("id") Long id) {
+        List<Ticket> tickets = service.findTicketsByClient(id);
+        return Response.ok(tickets).build();
+    }
+
+    // Endpoint métier : nombre de tickets actifs d'un client
+    @GET
+    @Path("/{id}/tickets/count-active")
+    public Response countActiveTickets(@PathParam("id") Long id) {
+        long count = service.countActiveTickets(id);
+        return Response.ok(count).build();
     }
 }

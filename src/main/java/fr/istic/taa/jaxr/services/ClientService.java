@@ -4,12 +4,15 @@ import java.util.List;
 
 import fr.istic.taa.jaxr.dto.ClientCreateDTO;
 import fr.istic.taa.jaxrs.dao.generic.ClientDao;
+import fr.istic.taa.jaxrs.dao.generic.TicketDao;
 import fr.istic.taa.jaxrs.domain.Client;
+import fr.istic.taa.jaxrs.domain.Ticket;
 import jakarta.ws.rs.NotFoundException;
 
 public class ClientService {
 
     private final ClientDao clientDao = new ClientDao();
+    private final TicketDao ticketDao = new TicketDao();
 
     public List<Client> findAll() {
         return clientDao.findAll();
@@ -39,5 +42,22 @@ public class ClientService {
             throw new NotFoundException("Client non trouvé");
         }
         clientDao.delete(client);
+    }
+
+    // Lien Client ↔ Ticket (relation bidirectionnelle mappedBy = "client")
+    public List<Ticket> findTicketsByClient(Long clientId) {
+        Client client = clientDao.findOne(clientId);
+        if (client == null) {
+            throw new NotFoundException("Client non trouvé");
+        }
+        return ticketDao.findByClient(client);
+    }
+
+    public long countActiveTickets(Long clientId) {
+        Client client = clientDao.findOne(clientId);
+        if (client == null) {
+            throw new NotFoundException("Client non trouvé");
+        }
+        return ticketDao.countActiveByClient(client);
     }
 }

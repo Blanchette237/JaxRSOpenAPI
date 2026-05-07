@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+    version="3.0">
+
+    <!--
+        Ce fichier (src/test/resources) remplace celui de src/main/resources
+        pendant mvn test grâce à l'ordre de classpath Maven.
+
+        Différences avec le "dev" de production :
+        - URL en mémoire (mem:testdb) : pas besoin de serveur HSQL démarré
+        - drop-and-create : les tables sont recréées proprement à chaque lancement
+        - show_sql=false : logs moins verbeux en test
+    -->
+    <persistence-unit name="dev" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>fr.istic.taa.jaxrs.domain.User</class>
+        <class>fr.istic.taa.jaxrs.domain.Client</class>
+        <class>fr.istic.taa.jaxrs.domain.Organiser</class>
+        <class>fr.istic.taa.jaxrs.domain.Concert</class>
+        <class>fr.istic.taa.jaxrs.domain.Ticket</class>
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver"  value="org.hsqldb.jdbcDriver"/>
+            <!-- mem:testdb = base en mémoire, DB_CLOSE_DELAY=-1 = reste active tant que la JVM tourne -->
+            <property name="jakarta.persistence.jdbc.url"     value="jdbc:hsqldb:mem:testdb;DB_CLOSE_DELAY=-1"/>
+            <property name="jakarta.persistence.jdbc.user"    value="sa"/>
+            <property name="jakarta.persistence.jdbc.password" value=""/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="hibernate.dialect"  value="org.hibernate.dialect.HSQLDialect"/>
+            <property name="hibernate.show_sql" value="false"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import fr.istic.taa.jaxrs.rest.ClientResource;
 import fr.istic.taa.jaxrs.rest.ConcertRessource;
+import fr.istic.taa.jaxrs.rest.CorsFilter;
 import fr.istic.taa.jaxrs.rest.OrganiserResource;
 import fr.istic.taa.jaxrs.rest.PetResource;
 import fr.istic.taa.jaxrs.rest.TicketRessource;
@@ -21,6 +22,9 @@ public class TestApplication extends Application {
 
         // Documentation OpenAPI (Swagger UI accessible via /openapi.json)
         clazzes.add(OpenApiResource.class);
+
+        // Filtre CORS (doit être enregistré pour que les frontends Angular puissent appeler l'API)
+        clazzes.add(CorsFilter.class);
 
         // Ressources REST
         clazzes.add(ConcertRessource.class);
